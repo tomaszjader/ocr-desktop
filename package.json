@@ -1,0 +1,50 @@
+{
+  "name": "ocr-desktop",
+  "version": "1.0.1",
+  "description": "Lokalny OCR zaznaczonego fragmentu ekranu",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test",
+    "dist": "electron-builder --win portable",
+    "pack": "electron-builder --dir",
+    "test:e2e": "electron scripts/e2e.cjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tomaszjader/ocr-desktop.git"
+  },
+  "keywords": [],
+  "author": "Tomasz",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/tomaszjader/ocr-desktop/issues"
+  },
+  "homepage": "https://github.com/tomaszjader/ocr-desktop#readme",
+  "dependencies": {
+    "@tesseract.js-data/eng": "^1.0.0",
+    "@tesseract.js-data/pol": "^1.0.0",
+    "tesseract.js": "^7.0.0"
+  },
+  "devDependencies": {
+    "electron": "^44.3.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "pl.tekstzekranu.desktop",
+    "productName": "Tekst z ekranu",
+    "asar": false,
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "portable",
+      "signAndEditExecutable": false
+    },
+    "portable": {
+      "artifactName": "Tekst-z-ekranu-1.0.1.exe"
+    }
+  }
+}
