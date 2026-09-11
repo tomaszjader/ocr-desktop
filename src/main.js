@@ -112,7 +112,7 @@ else {
   app.on('second-instance', () => { if (main) showMain(); });
   app.whenReady().then(async () => {
     app.setAppUserModelId('pl.tekstzekranu.desktop');
-    main = new BrowserWindow({ width: 780, height: 690, minWidth: 620, minHeight: 580, backgroundColor: '#101614', autoHideMenuBar: true,
+    main = new BrowserWindow({ width: 1120, height: 780, minWidth: 760, minHeight: 620, backgroundColor: '#080d18', autoHideMenuBar: true,
       webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true } });
     main.on('close', event => { if (!quitting) { event.preventDefault(); main.hide(); } });
     const pixels = Buffer.alloc(32 * 32 * 4);
@@ -135,6 +135,10 @@ else {
       if (event.sender !== main.webContents || !status.text) return;
       try { await clipboard.writeText(status.text); }
       catch { send('Schowek jest chwilowo niedostępny. Spróbuj ponownie.'); }
+    });
+    ipcMain.on('clear', event => {
+      if (event.sender !== main.webContents || busy) return;
+      send('Gotowy do zaznaczania', { text: '' });
     });
     status.shortcut = globalShortcut.register('Super+Shift+Q', capture);
     send(status.shortcut ? 'Gotowy do zaznaczania' : 'Skrót Win + Shift + Q jest zajęty. Zamknij aplikację, która go używa, i uruchom tę ponownie.');
