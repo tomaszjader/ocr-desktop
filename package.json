@@ -1,6 +1,6 @@
 {
   "name": "ocr-desktop",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Lokalny OCR zaznaczonego fragmentu ekranu",
   "main": "src/main.js",
   "scripts": {
@@ -44,7 +44,7 @@
       "signAndEditExecutable": false
     },
     "portable": {
-      "artifactName": "Tekst-z-ekranu-1.0.1.exe"
+    "artifactName": "Tekst-z-ekranu-1.0.2.exe"
     }
   }
 }
