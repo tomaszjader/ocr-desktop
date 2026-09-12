@@ -29,17 +29,17 @@
 
     <div class="app-layout">
       <aside class="sidebar" aria-label="Nawigacja aplikacji">
-        <div class="sidebar-heading"><span>NARZĘDZIA</span><span>v1.0.2</span></div>
+        <div class="sidebar-heading"><span>NARZĘDZIA</span><span>v1.0.3</span></div>
         <nav class="tool-nav">
-          <div class="nav-item is-active"><span class="nav-icon">⌁</span><span>Aktywny odczyt</span><kbd>Alt S</kbd></div>
-          <div class="nav-item"><span class="nav-icon">◷</span><span>Historia odczytów</span><kbd>Ctrl H</kbd></div>
-          <div class="nav-item"><span class="nav-icon">□</span><span>Szablony danych</span><kbd>Ctrl T</kbd></div>
-          <div class="nav-item"><span class="nav-icon">✦</span><span>Baza modeli</span><kbd>⌘T</kbd></div>
+          <button class="nav-item is-active" type="button" data-view="readout"><span class="nav-icon">⌁</span><span>Aktywny odczyt</span><kbd>Alt S</kbd></button>
+          <button class="nav-item" type="button" data-view="history"><span class="nav-icon">◷</span><span>Historia odczytów</span><kbd>Ctrl H</kbd></button>
+          <button class="nav-item" type="button" data-view="models"><span class="nav-icon">□</span><span>Baza modeli</span><kbd>Ctrl T</kbd></button>
+          <button class="nav-item" type="button" data-view="settings"><span class="nav-icon">⚙</span><span>Ustawienia</span><kbd>Alt ,</kbd></button>
         </nav>
         <div class="sidebar-status">
           <div class="sidebar-status-title"><span class="live-dot"></span>SILNIK OCR ON-DEVICE</div>
-          <div class="sidebar-metrics"><span>Czas reakcji</span><strong>&lt; 20 ms</strong></div>
-          <div class="sidebar-metrics"><span>Pamięć RAM</span><strong>lokalna</strong></div>
+          <div class="sidebar-metrics"><span>Tryb pracy</span><strong>offline</strong></div>
+          <div class="sidebar-metrics"><span>Obrazy</span><strong>tylko RAM</strong></div>
         </div>
       </aside>
 
@@ -56,7 +56,7 @@
                 <span class="action-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none"><path d="M4 9V5h4M20 9V5h-4M4 15v4h4M20 15v4h-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                 </span>
-                <span class="action-copy"><strong>Zaznacz fragment ekranu</strong><small>AUTOMATYCZNE ROZPOZNANIE OCR</small></span>
+                <span class="action-copy"><strong id="capture-label">Zaznacz fragment ekranu</strong><small id="capture-description">AUTOMATYCZNE ROZPOZNANIE OCR</small></span>
                 <span class="shortcut"><kbd>Win</kbd><b>+</b><kbd>Shift</kbd><b>+</b><kbd>Q</kbd></span>
               </button>
               <div class="capture-meta"><span>Ekran główny · obsługa wielu monitorów</span><span id="capture-hint">Gotowy do zaznaczania</span></div>
@@ -98,10 +98,33 @@
           <article class="benefit-card"><div class="benefit-icon">□</div><div><h2>Gotowe do wklejenia</h2><p>Czyste akapity, mniej zbędnych łamań i natychmiastowy schowek.</p></div><span class="benefit-check">✓</span></article>
         </section>
 
-        <footer class="app-footer"><span>♢ Prywatność 100% · Dane nie opuszczają tej maszyny</span><span>Zminimalizowano do zasobnika systemowego · ESC / ⌘W</span></footer>
+        <footer class="app-footer"><span>♢ Prywatność 100% · Dane nie opuszczają tej maszyny</span><span>Zminimalizowano do zasobnika systemowego · ESC / Alt + F4</span></footer>
       </main>
     </div>
   </div>
+
+  <aside id="history-panel" class="drawer" hidden>
+    <div class="drawer-header"><div><div class="eyebrow">HISTORIA ODCZYTÓW</div><h2>Ostatnie wyniki</h2></div><button id="history-close" class="icon-button" type="button" aria-label="Zamknij historię">×</button></div>
+    <div class="drawer-toolbar"><span id="history-count">0 wpisów · tylko w pamięci</span><button id="clear-history" class="ghost-button" type="button">Wyczyść historię</button></div>
+    <div id="history-list" class="history-list"></div>
+  </aside>
+
+  <aside id="models-panel" class="drawer" hidden>
+    <div class="drawer-header"><div><div class="eyebrow">BAZA MODELI</div><h2>Silnik rozpoznawania</h2></div><button id="models-close" class="icon-button" type="button" aria-label="Zamknij bazę modeli">×</button></div>
+    <div class="model-card"><span class="model-icon">ϟ</span><div><h3>Tesseract OCR</h3><p>Model lokalny dla języka polskiego i angielskiego.</p><span class="model-status"><span class="live-dot"></span>Aktywny · dane dołączone do aplikacji</span></div></div>
+    <div class="model-note">Obrazy są przetwarzane wyłącznie w pamięci RAM. Aplikacja nie pobiera modeli podczas pracy i nie wysyła danych na zewnątrz.</div>
+  </aside>
+
+  <aside id="settings-panel" class="drawer" hidden>
+    <div class="drawer-header"><div><div class="eyebrow">KONFIGURACJA</div><h2>Ustawienia</h2></div><button id="settings-close" class="icon-button" type="button" aria-label="Zamknij ustawienia">×</button></div>
+    <div class="settings-list">
+      <label class="setting-row"><span><strong>Kopiuj wynik automatycznie</strong><small>Po odczycie tekst trafi od razu do schowka.</small></span><input id="setting-autocopy" data-setting="autoCopy" type="checkbox"><i></i></label>
+      <label class="setting-row"><span><strong>Zachowuj historię do zamknięcia</strong><small>Przechowuj tekst lokalnie w pamięci aplikacji.</small></span><input id="setting-history" data-setting="keepHistory" type="checkbox"><i></i></label>
+      <label class="setting-row"><span><strong>Porządkuj wynik OCR</strong><small>Usuń nadmiarowe puste wiersze i białe znaki.</small></span><input id="setting-normalize" data-setting="normalizeText" type="checkbox"><i></i></label>
+    </div>
+  </aside>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
   <aside id="info-panel" class="info-panel" hidden>
     <div class="info-panel-heading"><strong>Przetwarzanie lokalne</strong><button id="info-close" class="icon-button" type="button" aria-label="Zamknij informacje">×</button></div>

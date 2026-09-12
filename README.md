@@ -1,10 +1,10 @@
 ﻿# Tekst z ekranu
 
-Aplikacja Electron dla Windows 10/11. Zaznacz fragment ekranu, a lokalny Tesseract OCR odczyta tekst po polsku i angielsku i skopiuje go do schowka. Obrazy nie są wysyłane do usług zewnętrznych ani zapisywane na dysku. Ostatni wynik jest przechowywany w pamięci do zamknięcia aplikacji.
+Aplikacja Electron dla Windows 10/11. Zaznacz fragment ekranu, a lokalny Tesseract OCR odczyta tekst po polsku i angielsku i skopiuje go do schowka. Obrazy nie są wysyłane do usług zewnętrznych ani zapisywane na dysku. Historia wyników jest przechowywana wyłącznie w pamięci do zamknięcia aplikacji.
 
 ## Uruchomienie
 
-Gotowy plik: `dist/Tekst-z-ekranu-1.0.2.exe` (Windows x64, wersja przenośna).
+Gotowy plik: `dist/Tekst-z-ekranu-1.0.3.exe` (Windows x64, wersja przenośna).
 
 1. Uruchom aplikację.
 2. Naciśnij **Windows + Shift + Q**.
@@ -36,10 +36,12 @@ Testy automatyczne sprawdzają przeliczanie współrzędnych DPI, przycinanie pr
 
 Ręczny test pełnego przepływu: uruchom EXE, użyj skrótu nad inną aplikacją, zaznacz tekst, wklej wynik do Notatnika. Sprawdź Esc, drugi monitor i zamknięcie do zasobnika.
 
-## Wersja 1.0.2
+## Wersja 1.0.3
 
 - Dodano nowy pulpit OCR inspirowany projektem Google Stitch.
 - Dodano stany skanowania, sukcesu i błędu oraz czyszczenie wyniku.
+- Dodano lokalną historię wyników, ustawienia OCR i działające widoki panelu bocznego.
+- Dodano możliwość anulowania zaznaczania oraz czytelne potwierdzenia kopiowania.
 
 ## Poprawki 1.0.1
 

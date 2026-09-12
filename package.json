@@ -1,12 +1,14 @@
 {
   "name": "ocr-desktop",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Lokalny OCR zaznaczonego fragmentu ekranu",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
     "test": "node --test",
+    "pre-dist": "node scripts/create-icon.cjs",
     "dist": "electron-builder --win portable",
+    "postdist": "node scripts/copy-portable.cjs",
     "pack": "electron-builder --dir",
     "test:e2e": "electron scripts/e2e.cjs"
   },
@@ -34,6 +36,7 @@
   "build": {
     "appId": "pl.tekstzekranu.desktop",
     "productName": "Tekst z ekranu",
+    "icon": "src/icon.ico",
     "asar": false,
     "files": [
       "src/**/*",
@@ -41,10 +44,10 @@
     ],
     "win": {
       "target": "portable",
-      "signAndEditExecutable": false
+      "signExecutable": false
     },
     "portable": {
-    "artifactName": "Tekst-z-ekranu-1.0.2.exe"
+    "artifactName": "Tekst-z-ekranu-1.0.3.exe"
     }
   }
 }
