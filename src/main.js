@@ -5,6 +5,9 @@ const { makeWorker } = require('./ocr');
 const { captureDisplays, withTimeout } = require('./capture');
 const { createHistoryStore } = require('./history');
 const { normalizeOcrText } = require('./text');
+const APP_USER_MODEL_ID = 'pl.tekstzekranu.ocrdesktop';
+const TOAST_ACTIVATOR_CLSID = '{6F460C4A-1A97-4ED0-9C0F-8C953C9CE39B}';
+const APP_ICON = path.join(__dirname, 'icon.ico');
 let main, tray, worker, busy = false, quitting = false;
 let captureId = 0, phase = 'idle', restoreMain = false;
 let overlays = [];
@@ -16,7 +19,24 @@ const send = (message, extra = {}) => {
   if (main && !main.isDestroyed()) main.webContents.send('status', status);
   if (tray) tray.setToolTip(`Tekst z ekranu — ${message}`.slice(0, 120));
 };
-const notify = body => { if (Notification.isSupported()) new Notification({ title: 'Tekst z ekranu', body }).show(); };
+function showMain() {
+  if (!main || main.isDestroyed()) return;
+  if (main.isMinimized()) main.restore();
+  if (!main.isVisible()) main.show();
+  main.focus();
+}
+const notify = body => {
+  // Portable Electron builds do not have a Start Menu shortcut with the
+  // AUMID/ToastActivatorCLS​ID pair required for clickable Windows toasts.
+  // Keep the app quiet in the background instead of launching electron.exe.
+  if (process.platform === 'win32' && (!app.isPackaged || process.env.PORTABLE_EXECUTABLE_FILE)) {
+    return;
+  }
+  if (!Notification.isSupported()) return;
+  const notification = new Notification({ title: 'Tekst z ekranu', body });
+  notification.on('click', showMain);
+  notification.show();
+};
 function closeOverlays() {
   const closing = overlays;
   overlays = [];
@@ -42,7 +62,7 @@ async function capture() {
     const captures = await captureDisplays(displays, { desktopCapturer, screen, nativeImage });
     if (currentId !== captureId) return;
     for (const { display, image } of captures) {
-      const window = new BrowserWindow({ ...display.bounds, frame: false, thickFrame: false, transparent: false, resizable: false,
+      const window = new BrowserWindow({ ...display.bounds, frame: false, thickFrame: false, transparent: false, resizable: false, icon: APP_ICON,
         movable: false, skipTaskbar: true, alwaysOnTop: true, show: false, enableLargerThanScreen: true,
         webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true } });
       window.setAlwaysOnTop(true, 'screen-saver');
@@ -89,7 +109,7 @@ async function recognize(event, rect) {
     png = cropped.toPNG();
     phase = 'ocr';
     closeOverlays();
-    restoreWindow();
+    restoreMain = false;
     send('Odczytuję tekst lokalnie…');
     if (!worker) {
       const initializing = makeWorker(app.getPath('userData'), progress => {
@@ -114,22 +134,27 @@ async function recognize(event, rect) {
     send(`Błąd OCR: ${error.message}`); notify(status.message);
   }
 }
-function showMain() { main.show(); main.focus(); }
 if (!app.requestSingleInstanceLock()) app.quit();
 else {
   app.on('second-instance', () => { if (main) showMain(); });
   app.whenReady().then(async () => {
-    app.setAppUserModelId('pl.tekstzekranu.desktop');
-    main = new BrowserWindow({ width: 1120, height: 780, minWidth: 760, minHeight: 620, backgroundColor: '#080d18', icon: path.join(__dirname, 'icon.ico'), autoHideMenuBar: true,
-      webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true } });
-    main.on('close', event => { if (!quitting) { event.preventDefault(); main.hide(); } });
-    const pixels = Buffer.alloc(32 * 32 * 4);
-    for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) {
-      const p = (y * 32 + x) * 4;
-      const mark = (y >= 7 && y <= 11 && x >= 6 && x <= 25) || (x >= 14 && x <= 18 && y >= 7 && y <= 25);
-      pixels.set(mark ? [30, 40, 25, 255] : [149, 231, 181, 255], p);
+    if (process.platform === 'win32') {
+      // Keep the same Windows identity in development and in packaged builds.
+      // Using electron.exe here makes Windows group the app with Electron and
+      // show Electron's default atom icon in the taskbar.
+      app.setAppUserModelId(APP_USER_MODEL_ID);
+      if (app.isPackaged && typeof app.setToastActivatorCLSID === 'function') app.setToastActivatorCLSID(TOAST_ACTIVATOR_CLSID);
+      if (typeof Notification.handleActivation === 'function') Notification.handleActivation(() => showMain());
     }
-    tray = new Tray(nativeImage.createFromBitmap(pixels, { width: 32, height: 32 }));
+    const appIcon = nativeImage.createFromPath(APP_ICON);
+    if (appIcon.isEmpty()) throw new Error(`Nie udało się wczytać ikony aplikacji: ${APP_ICON}`);
+    main = new BrowserWindow({ width: 1120, height: 780, minWidth: 760, minHeight: 620, backgroundColor: '#080d18', icon: APP_ICON, autoHideMenuBar: true,
+      webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true } });
+    // Explicitly set the window icon as well, so the taskbar and the window
+    // chrome use the same asset as the executable and system tray.
+    main.setIcon(appIcon);
+    main.on('close', event => { if (!quitting) { event.preventDefault(); main.hide(); } });
+    tray = new Tray(appIcon.resize({ width: 16, height: 16, quality: 'best' }));
     tray.setContextMenu(Menu.buildFromTemplate([
       { label: 'Zaznacz tekst (Win + Shift + Q)', click: capture }, { label: 'Otwórz aplikację', click: showMain },
       { type: 'separator' }, { label: 'Zakończ', click: () => app.quit() }

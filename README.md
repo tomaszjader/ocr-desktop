@@ -4,12 +4,12 @@ Aplikacja Electron dla Windows 10/11. Zaznacz fragment ekranu, a lokalny Tessera
 
 ## Uruchomienie
 
-Gotowy plik: `dist/Tekst-z-ekranu-1.0.3.exe` (Windows x64, wersja przenośna).
+Gotowy plik: `dist/Tekst-z-ekranu.exe` (Windows x64, wersja przenośna).
 
 1. Uruchom aplikację.
 2. Naciśnij **Windows + Shift + Q**.
 3. Przeciągnij myszą po tekście na wybranym monitorze.
-4. Poczekaj na powiadomienie i wklej wynik przez **Ctrl + V**.
+4. Aplikacja działa w tle, a wynik automatycznie trafia do schowka. Wklej go przez **Ctrl + V**; okno aplikacji nie wyskakuje po zakończeniu OCR.
 
 **Esc** lub prawy przycisk myszy anuluje zaznaczanie. Zaznaczenie musi mieścić się na jednym monitorze. Aplikacja obsługuje wiele monitorów i skalowanie DPI.
 
@@ -35,6 +35,12 @@ npm run dist
 Testy automatyczne sprawdzają przeliczanie współrzędnych DPI, przycinanie przy krawędzi i błędne zaznaczenia. Dodatkowo sprawdzono lokalny OCR na obrazie z tekstem „Zażółć gęślą jaźń. Hello OCR 123.”.
 
 Ręczny test pełnego przepływu: uruchom EXE, użyj skrótu nad inną aplikacją, zaznacz tekst, wklej wynik do Notatnika. Sprawdź Esc, drugi monitor i zamknięcie do zasobnika.
+
+## Wersja 1.0.4
+
+- Ujednolicono logo w oknie, na pasku zadań, w widoku Alt+Tab i w zasobniku systemowym.
+- Dodano natywne rozmiary ikony Windows od 16 do 256 px i poprawiono jej kolory BGRA.
+- Zmieniono identyfikator aplikacji Windows, aby odłączyć ją od zapamiętanej grupy z ikoną Electron.
 
 ## Wersja 1.0.3
 
