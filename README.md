@@ -1,25 +1,51 @@
-﻿# Tekst z ekranu
+# Tekst z ekranu
 
-Aplikacja Electron dla Windows 10/11. Zaznacz fragment ekranu, a lokalny Tesseract OCR odczyta tekst po polsku i angielsku i skopiuje go do schowka. Obrazy nie są wysyłane do usług zewnętrznych ani zapisywane na dysku. Historia wyników jest przechowywana wyłącznie w pamięci do zamknięcia aplikacji.
+`Tekst z ekranu` is a Windows desktop OCR application built with Electron. Select any part of your screen and the local Tesseract OCR engine recognizes Polish and English text, then copies the result to the clipboard.
 
-## Uruchomienie
+The application is designed to work offline: screen images are processed locally in memory, are not sent to external services, and are not saved to disk. OCR history is kept only in memory until the application is closed.
 
-Gotowy plik: `dist/Tekst-z-ekranu.exe` (Windows x64, wersja przenośna).
+## Features
 
-1. Uruchom aplikację.
-2. Naciśnij **Windows + Shift + Q**.
-3. Przeciągnij myszą po tekście na wybranym monitorze.
-4. Aplikacja działa w tle, a wynik automatycznie trafia do schowka. Wklej go przez **Ctrl + V**; okno aplikacji nie wyskakuje po zakończeniu OCR.
+- Local, on-device OCR powered by Tesseract.js and WebAssembly.
+- Polish and English recognition, including Polish diacritics.
+- Global shortcut: `Win + Shift + Q`.
+- Multi-monitor support and DPI scaling support.
+- Automatic clipboard copy after recognition.
+- Optional OCR history, result normalization, and automatic copying.
+- Selection cancellation with `Esc`, right-click, or the capture shortcut again.
+- System tray support: closing the window minimizes the app to the tray.
+- Portable Windows x64 build; no separate Tesseract installation is required.
 
-**Esc** lub prawy przycisk myszy anuluje zaznaczanie. Zaznaczenie musi mieścić się na jednym monitorze. Aplikacja obsługuje wiele monitorów i skalowanie DPI.
+## Download and use
 
-Zamknięcie okna pozostawia aplikację w zasobniku systemowym. Aby ją wyłączyć, kliknij prawym przyciskiem ikonę w zasobniku i wybierz **Zakończ**. Program nie uruchamia się automatycznie z systemem. Jeżeli skrót jest zajęty, aplikacja pokaże komunikat; można korzystać z przycisku w oknie lub menu zasobnika.
+The portable executable is created at `dist/Tekst-z-ekranu.exe` after building the project.
 
-Silnik Tesseract (WebAssembly przez Tesseract.js) i modele językowe są dołączone do paczki. Nie trzeba instalować Tesseracta ani pobierać modeli podczas używania. Pierwszy odczyt trwa dłużej z powodu inicjalizacji silnika. Puste wyniki nie nadpisują schowka.
+1. Start the application.
+2. Press `Win + Shift + Q` (or click the capture button in the app).
+3. Drag over the text you want to recognize. The selection must stay on one monitor.
+4. Paste the recognized text with `Ctrl + V`.
 
-## Rozwój
+Press `Esc` or right-click to cancel a selection. The application supports multiple monitors, including selections over the taskbar. The first OCR operation may take longer because the engine is initialized.
 
-Wymagany Node.js i npm. Instalacja zależności wymaga internetu.
+When the window is closed, the application remains in the system tray. Right-click its tray icon and choose **Exit** to quit completely. The application does not start automatically with Windows.
+
+If the global shortcut is already in use, the app shows a message. Close the conflicting application and restart `Tekst z ekranu`, or use the capture button or tray menu.
+
+Empty OCR results do not overwrite the clipboard.
+
+## Privacy
+
+All OCR processing is local. The bundled Polish and English language data is copied to the application's local cache on first use. No screen image or recognized text is uploaded. History and settings are held in application memory and are not persisted after exit.
+
+## Development
+
+Requirements:
+
+- Windows 10 or 11 for the full desktop workflow.
+- Node.js and npm.
+- Internet access for the initial dependency installation.
+
+Install dependencies and run the available scripts:
 
 ```powershell
 npm ci
@@ -28,32 +54,37 @@ npm test
 npm run dist
 ```
 
-`npm run dist` tworzy przenośny plik EXE w `dist/`. Paczka nie jest podpisana cyfrowo.
+The scripts are:
 
-## Sprawdzenie
+- `npm start` — starts the Electron application.
+- `npm test` — runs the automated unit tests with Node's test runner.
+- `npm run dist` — builds a portable Windows executable in `dist/` and creates the generic `Tekst-z-ekranu.exe` copy.
+- `npm run pack` — creates an unpacked Electron build for inspection.
+- `npm run test:e2e` — runs the end-to-end desktop test on the attached monitors.
 
-Testy automatyczne sprawdzają przeliczanie współrzędnych DPI, przycinanie przy krawędzi i błędne zaznaczenia. Dodatkowo sprawdzono lokalny OCR na obrazie z tekstem „Zażółć gęślą jaźń. Hello OCR 123.”.
+The executable is not digitally signed. Before running `npm run test:e2e`, close any running instance of the app so that the global shortcut is available. The end-to-end test needs an unlocked, visible desktop; it restores the original clipboard text when it finishes.
 
-Ręczny test pełnego przepływu: uruchom EXE, użyj skrótu nad inną aplikacją, zaznacz tekst, wklej wynik do Notatnika. Sprawdź Esc, drugi monitor i zamknięcie do zasobnika.
+## Testing
 
-## Wersja 1.0.4
+The automated tests cover:
 
-- Ujednolicono logo w oknie, na pasku zadań, w widoku Alt+Tab i w zasobniku systemowym.
-- Dodano natywne rozmiary ikony Windows od 16 do 256 px i poprawiono jej kolory BGRA.
-- Zmieniono identyfikator aplikacji Windows, aby odłączyć ją od zapamiętanej grupy z ikoną Electron.
+- DPI-aware coordinate conversion.
+- Cropping at image boundaries.
+- Invalid and empty selections.
+- OCR text normalization.
+- History ordering, deduplication, restoring, deleting, and clearing.
+- Display/source matching and operation timeouts.
 
-## Wersja 1.0.3
+The end-to-end test additionally checks the global shortcut, full-screen overlays, dragging, Polish characters, clipboard integration, cancellation, and overlay cleanup.
 
-- Dodano nowy pulpit OCR inspirowany projektem Google Stitch.
-- Dodano stany skanowania, sukcesu i błędu oraz czyszczenie wyniku.
-- Dodano lokalną historię wyników, ustawienia OCR i działające widoki panelu bocznego.
-- Dodano możliwość anulowania zaznaczania oraz czytelne potwierdzenia kopiowania.
+## Version 1.0.4
 
-## Poprawki 1.0.1
+- Unified the application icon in the window, taskbar, Alt+Tab view, and system tray.
+- Added native Windows icon sizes from 16 to 256 px and fixed BGRA colors.
+- Changed the Windows application identifier to separate the app from Electron's remembered icon group.
 
-- Poprawiono błąd uniemożliwiający zaznaczanie, gdy Electron zwraca puste identyfikatory monitorów. W takiej sytuacji obrazy są pobierane lokalnie przez Windows PowerShell i System.Drawing, według fizycznych współrzędnych ekranów, bez zapisywania zrzutów na dysku.
-- Nakładka obejmuje cały ekran, także pasek zadań, i pojawia się dopiero po załadowaniu obrazu.
-- Okno aplikacji znika na czas przechwytywania. Esc lub ponowne Win + Shift + Q anuluje zaznaczanie; błędy i przekroczenie czasu przywracają możliwość kolejnej próby.
-- Wynik jest zgłaszany dopiero po zakończeniu asynchronicznego zapisu do schowka.
+## License
 
-`npm run test:e2e` otwiera planszę testową na każdym monitorze i sprawdza systemowy skrót, przeciąganie, pełne wymiary nakładki, OCR polskich znaków, schowek oraz anulowanie. Przed testem zamknij działającą aplikację, aby zwolnić skrót. Test potrzebuje odblokowanego pulpitu. Test odczytuje i przywraca tekst schowka; nie zachowuje jego formatowania.
+This project is published under the ISC license. See `package.json` for the package metadata.
+
+For the Polish documentation, see [README.pl.md](README.pl.md).
