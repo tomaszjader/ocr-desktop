@@ -85,6 +85,6 @@ Test end-to-end dodatkowo sprawdza globalny skrót, nakładki na całym ekranie,
 
 ## Licencja
 
-Projekt jest udostępniany na licencji ISC. Metadane pakietu znajdują się w pliku `package.json`.
+Projekt jest udostępniany na [licencji MIT](LICENSE). Metadane pakietu znajdują się w pliku `package.json`.
 
 English documentation: [README.md](README.md).

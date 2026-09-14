@@ -85,6 +85,6 @@ The end-to-end test additionally checks the global shortcut, full-screen overlay
 
 ## License
 
-This project is published under the ISC license. See `package.json` for the package metadata.
+This project is published under the [MIT License](LICENSE). See `package.json` for the package metadata.
 
 For the Polish documentation, see [README.pl.md](README.pl.md).
