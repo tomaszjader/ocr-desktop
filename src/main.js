@@ -42,7 +42,10 @@ function closeOverlays() {
   overlays = [];
   for (const item of closing) if (!item.window.isDestroyed()) item.window.destroy();
 }
-function restoreWindow() { if (restoreMain && !quitting) main.show(); restoreMain = false; }
+function restoreWindow() {
+  if (restoreMain && !quitting && main && !main.isDestroyed()) showMain();
+  restoreMain = false;
+}
 function cancel() {
   if (phase === 'ocr') return;
   captureId++;
@@ -95,7 +98,7 @@ async function capture() {
   } catch (error) {
     if (currentId !== captureId) return;
     closeOverlays(); busy = false; phase = 'idle'; restoreWindow();
-    send(`Błąd: ${error.message}`); notify(status.message);
+    send(`Błąd: ${error.message}`, { text: '' }); notify(status.message);
   }
 }
 async function recognize(event, rect) {
@@ -109,7 +112,6 @@ async function recognize(event, rect) {
     png = cropped.toPNG();
     phase = 'ocr';
     closeOverlays();
-    restoreMain = false;
     send('Odczytuję tekst lokalnie…');
     if (!worker) {
       const initializing = makeWorker(app.getPath('userData'), progress => {
@@ -127,11 +129,15 @@ async function recognize(event, rect) {
       send(settings.autoCopy ? 'Tekst skopiowany do schowka' : 'Odczyt gotowy do skopiowania', { text, copyNotice: settings.autoCopy ? 'Tekst skopiowany do schowka.' : 'Odczyt zakończony.' });
       if (settings.autoCopy) notify('Tekst skopiowany. Wklej go za pomocą Ctrl + V.');
     }
-    else { send('Nie znaleziono tekstu. Zaznacz wyraźniejszy fragment.'); notify(status.message); }
+    else {
+      send('Nie znaleziono tekstu. Zaznacz wyraźniejszy fragment.', { text: '' });
+      notify(status.message);
+    }
+    restoreWindow();
   } catch (error) {
     closeOverlays(); busy = false; phase = 'idle'; restoreWindow();
     if (worker) { await worker.terminate().catch(() => {}); worker = null; }
-    send(`Błąd OCR: ${error.message}`); notify(status.message);
+    send(`Błąd OCR: ${error.message}`, { text: '' }); notify(status.message);
   }
 }
 if (!app.requestSingleInstanceLock()) app.quit();
