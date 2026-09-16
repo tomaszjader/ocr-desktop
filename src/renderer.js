@@ -47,12 +47,12 @@ function render(status) {
   document.body.dataset.hasText = String(hasText);
 
   statusElement.textContent = status.message;
-  captureHint.textContent = status.busy ? (status.phase === 'ocr' ? 'Rozpoznawanie lokalne…' : 'Kliknij, aby anulować') : state === 'success' ? 'Odczyt gotowy do wklejenia' : 'Gotowy do zaznaczania';
+  captureHint.textContent = status.busy ? (status.phase === 'ocr' ? 'Kliknij lub użyj skrótu, aby anulować' : 'Kliknij, aby anulować') : state === 'success' ? 'Odczyt gotowy do wklejenia' : 'Gotowy do zaznaczania';
   result.value = text;
-  captureButton.disabled = status.busy && status.phase === 'ocr';
-  captureButton.classList.toggle('is-cancel', status.busy && status.phase !== 'ocr');
-  captureLabel.textContent = status.busy && status.phase !== 'ocr' ? 'Anuluj zaznaczanie' : 'Zaznacz fragment ekranu';
-  captureDescription.textContent = status.busy && status.phase === 'ocr' ? 'SILNIK PRACUJE W PAMIĘCI RAM' : status.busy ? 'ESC LUB KLIKNIJ, ABY ANULOWAĆ' : 'AUTOMATYCZNE ROZPOZNANIE OCR';
+  captureButton.disabled = false;
+  captureButton.classList.toggle('is-cancel', status.busy);
+  captureLabel.textContent = status.busy && status.phase === 'ocr' ? 'Anuluj OCR' : status.busy ? 'Anuluj zaznaczanie' : 'Zaznacz fragment ekranu';
+  captureDescription.textContent = status.busy && status.phase === 'ocr' ? 'KLIKNIJ LUB SKRÓT, ABY PRZERWAĆ' : status.busy ? 'ESC LUB KLIKNIJ, ABY ANULOWAĆ' : 'AUTOMATYCZNE ROZPOZNANIE OCR';
   copyButton.disabled = !hasText || status.busy;
   clearButton.disabled = !hasText || status.busy;
   charCount.textContent = text.length;

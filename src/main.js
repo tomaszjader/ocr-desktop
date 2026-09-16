@@ -11,6 +11,7 @@ const APP_ICON = path.join(__dirname, 'icon.ico');
 let main, tray, worker, busy = false, quitting = false;
 let captureId = 0, phase = 'idle', restoreMain = false;
 let overlays = [];
+let ocrRun = null;
 const history = createHistoryStore();
 let settings = { autoCopy: true, keepHistory: true, normalizeText: true };
 let status = { message: 'Gotowy do zaznaczania', busy: false, phase: 'idle', text: '', shortcut: true, copyNotice: '' };
@@ -42,12 +43,21 @@ function closeOverlays() {
   overlays = [];
   for (const item of closing) if (!item.window.isDestroyed()) item.window.destroy();
 }
+function stopOcrRun(run) {
+  if (!run?.worker) return;
+  if (worker === run.worker) worker = null;
+  run.worker.terminate().catch(() => {});
+}
 function restoreWindow() {
   if (restoreMain && !quitting && main && !main.isDestroyed()) showMain();
   restoreMain = false;
 }
 function cancel() {
-  if (phase === 'ocr') return;
+  const run = phase === 'ocr' ? ocrRun : null;
+  if (run) {
+    ocrRun = null;
+    stopOcrRun(run);
+  }
   captureId++;
   closeOverlays(); busy = false; phase = 'idle'; restoreWindow();
   send('Anulowano. Gotowy do zaznaczania.');
@@ -104,6 +114,7 @@ async function capture() {
 async function recognize(event, rect) {
   const item = overlays.find(i => i.window.webContents === event.sender);
   if (!item) return;
+  const currentId = captureId;
   let png;
   try {
     const region = cropRectangle(rect, item.display.bounds, item.image.getSize());
@@ -113,16 +124,28 @@ async function recognize(event, rect) {
     phase = 'ocr';
     closeOverlays();
     send('Odczytuję tekst lokalnie…');
+    const run = { id: currentId, worker: null };
+    ocrRun = run;
     if (!worker) {
       const initializing = makeWorker(app.getPath('userData'), progress => {
         if (phase === 'ocr' && progress.status === 'recognizing text') send(`Odczytuję tekst… ${Math.round(progress.progress * 100)}%`);
       });
-      try { worker = await withTimeout(initializing, 60000, 'Uruchomienie OCR trwa zbyt długo. Spróbuj ponownie.'); }
+      let initializedWorker;
+      try { initializedWorker = await withTimeout(initializing, 60000, 'Uruchomienie OCR trwa zbyt długo. Spróbuj ponownie.'); }
       catch (error) { initializing.then(lateWorker => lateWorker.terminate()).catch(() => {}); throw error; }
+      if (currentId !== captureId || quitting) {
+        await initializedWorker.terminate().catch(() => {});
+        return;
+      }
+      worker = initializedWorker;
     }
-    const { data } = await withTimeout(worker.recognize(png), 90000, 'Odczyt trwa zbyt długo. Zaznacz mniejszy fragment.');
+    run.worker = worker;
+    const activeWorker = run.worker;
+    const { data } = await withTimeout(activeWorker.recognize(png), 90000, 'Odczyt trwa zbyt długo. Zaznacz mniejszy fragment.');
+    if (currentId !== captureId || quitting) return;
     const text = settings.normalizeText ? normalizeOcrText(data.text) : data.text.trim();
     if (text && settings.autoCopy) await clipboard.writeText(text);
+    if (currentId !== captureId || quitting) return;
     if (text && settings.keepHistory) history.add({ id: `${Date.now()}-${captureId}`, text, createdAt: new Date().toISOString() });
     busy = false; phase = 'idle';
     if (text) {
@@ -135,9 +158,12 @@ async function recognize(event, rect) {
     }
     restoreWindow();
   } catch (error) {
+    if (currentId !== captureId || quitting) return;
     closeOverlays(); busy = false; phase = 'idle'; restoreWindow();
     if (worker) { await worker.terminate().catch(() => {}); worker = null; }
     send(`Błąd OCR: ${error.message}`, { text: '' }); notify(status.message);
+  } finally {
+    if (ocrRun?.id === currentId) ocrRun = null;
   }
 }
 if (!app.requestSingleInstanceLock()) app.quit();
