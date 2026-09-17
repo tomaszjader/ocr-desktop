@@ -2,7 +2,7 @@
 
 `Tekst z ekranu` is a Windows desktop OCR application built with Electron. Select any part of your screen and the local Tesseract OCR engine recognizes Polish and English text, then copies the result to the clipboard.
 
-The application is designed to work offline: screen images are processed locally in memory, are not sent to external services, and are not saved to disk. OCR history is kept only in memory until the application is closed.
+The application is designed to work offline: screen images are processed locally in memory, are not sent to external services, and are not saved to disk. OCR history is kept only in memory by default; optional local persistence can be enabled in Settings.
 
 ## Features
 
@@ -35,7 +35,7 @@ Empty OCR results do not overwrite the clipboard.
 
 ## Privacy
 
-All OCR processing is local. The bundled Polish and English language data is copied to the application's local cache on first use. No screen image or recognized text is uploaded. History and settings are held in application memory and are not persisted after exit.
+All OCR processing is local. The bundled Polish and English language data is copied to the application's local cache on first use. No screen image or recognized text is uploaded. Settings persist locally between launches. History remains in memory unless optional local persistence is enabled in Settings.
 
 ## Development
 

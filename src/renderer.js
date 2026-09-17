@@ -20,6 +20,7 @@ const wordCount = document.getElementById('word-count');
 let currentStatus = { busy: false, phase: 'idle', text: '', copyNotice: '' };
 let lastHistoryText = '';
 let toastTimer;
+let currentSettings = { keepHistory: true, persistHistory: false };
 
 function classify(status) {
   const message = status.message || '';
@@ -95,7 +96,7 @@ async function refreshHistory() {
   const list = document.getElementById('history-list');
   const count = document.getElementById('history-count');
   const entries = await window.ocr.getHistory();
-  count.textContent = `${entries.length} ${entries.length === 1 ? 'wpis' : 'wpisów'} · tylko w pamięci`;
+  count.textContent = `${entries.length} ${entries.length === 1 ? 'wpis' : 'wpisów'} · ${currentSettings.persistHistory ? 'zapisane lokalnie' : 'tylko w pamięci'}`;
   list.replaceChildren();
   if (!entries.length) {
     const empty = document.createElement('div');
@@ -160,9 +161,12 @@ document.addEventListener('keydown', event => {
 });
 
 window.ocr.getSettings().then(settings => {
+  currentSettings = settings;
   document.querySelectorAll('[data-setting]').forEach(input => { input.checked = Boolean(settings[input.dataset.setting]); });
 });
 document.querySelectorAll('[data-setting]').forEach(input => input.addEventListener('change', () => {
+  currentSettings[input.dataset.setting] = input.checked;
   window.ocr.setSettings({ [input.dataset.setting]: input.checked });
-  showToast('Ustawienie zapisane tylko do zamknięcia aplikacji.');
+  showToast('Ustawienie zapisane.');
+  if (input.dataset.setting === 'persistHistory') refreshHistory();
 }));

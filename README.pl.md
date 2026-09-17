@@ -2,7 +2,7 @@
 
 `Tekst z ekranu` to desktopowa aplikacja OCR dla Windows zbudowana w Electronie. Zaznacz dowolny fragment ekranu, a lokalny silnik Tesseract OCR rozpozna tekst po polsku i angielsku, po czym skopiuje wynik do schowka.
 
-Aplikacja działa offline: obrazy ekranu są przetwarzane lokalnie w pamięci, nie są wysyłane do usług zewnętrznych ani zapisywane na dysku. Historia wyników jest przechowywana wyłącznie w pamięci do chwili zamknięcia aplikacji.
+Aplikacja działa offline: obrazy ekranu są przetwarzane lokalnie w pamięci, nie są wysyłane do usług zewnętrznych ani zapisywane na dysku. Historia wyników jest domyślnie przechowywana wyłącznie w pamięci do chwili zamknięcia aplikacji. Możesz opcjonalnie włączyć jej lokalny zapis między uruchomieniami.
 
 ## Funkcje
 
@@ -35,7 +35,7 @@ Pusty wynik OCR nie nadpisuje zawartości schowka.
 
 ## Prywatność
 
-Całe rozpoznawanie tekstu odbywa się lokalnie. Dołączone dane językowe polskiego i angielskiego są przy pierwszym użyciu kopiowane do lokalnego cache aplikacji. Żaden obraz ekranu ani rozpoznany tekst nie jest wysyłany do internetu. Historia i ustawienia są przechowywane w pamięci aplikacji i nie są zachowywane po jej zamknięciu.
+Całe rozpoznawanie tekstu odbywa się lokalnie. Dołączone dane językowe polskiego i angielskiego są przy pierwszym użyciu kopiowane do lokalnego cache aplikacji. Żaden obraz ekranu ani rozpoznany tekst nie jest wysyłany do internetu. Ustawienia są przechowywane lokalnie między uruchomieniami. Historia pozostaje tylko w pamięci, chyba że w ustawieniach włączysz jej lokalny zapis.
 
 ## Rozwój projektu
 

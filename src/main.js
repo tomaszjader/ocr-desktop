@@ -5,6 +5,7 @@ const { makeWorker } = require('./ocr');
 const { captureDisplays, withTimeout } = require('./capture');
 const { createHistoryStore } = require('./history');
 const { normalizeOcrText } = require('./text');
+const { readAppState, writeAppState } = require('./storage');
 const APP_USER_MODEL_ID = 'pl.tekstzekranu.ocrdesktop';
 const TOAST_ACTIVATOR_CLSID = '{6F460C4A-1A97-4ED0-9C0F-8C953C9CE39B}';
 const APP_ICON = path.join(__dirname, 'icon.ico');
@@ -13,7 +14,9 @@ let captureId = 0, phase = 'idle', restoreMain = false;
 let overlays = [];
 let ocrRun = null;
 const history = createHistoryStore();
-let settings = { autoCopy: true, keepHistory: true, normalizeText: true };
+const defaultSettings = { autoCopy: true, keepHistory: true, persistHistory: false, normalizeText: true };
+let settings = { ...defaultSettings };
+let statePath = null;
 let status = { message: 'Gotowy do zaznaczania', busy: false, phase: 'idle', text: '', shortcut: true, copyNotice: '' };
 const send = (message, extra = {}) => {
   status = { ...status, message, busy, phase, copyNotice: '', ...extra };
@@ -38,6 +41,17 @@ const notify = body => {
   notification.on('click', showMain);
   notification.show();
 };
+function persistState() {
+  if (!statePath) return;
+  try {
+    writeAppState(statePath, {
+      settings,
+      history: settings.keepHistory && settings.persistHistory ? history.list() : []
+    });
+  } catch {
+    // OCR must remain usable even when the user-data directory is unavailable.
+  }
+}
 function closeOverlays() {
   const closing = overlays;
   overlays = [];
@@ -146,7 +160,10 @@ async function recognize(event, rect) {
     const text = settings.normalizeText ? normalizeOcrText(data.text) : data.text.trim();
     if (text && settings.autoCopy) await clipboard.writeText(text);
     if (currentId !== captureId || quitting) return;
-    if (text && settings.keepHistory) history.add({ id: `${Date.now()}-${captureId}`, text, createdAt: new Date().toISOString() });
+    if (text && settings.keepHistory) {
+      history.add({ id: `${Date.now()}-${captureId}`, text, createdAt: new Date().toISOString() });
+      persistState();
+    }
     busy = false; phase = 'idle';
     if (text) {
       send(settings.autoCopy ? 'Tekst skopiowany do schowka' : 'Odczyt gotowy do skopiowania', { text, copyNotice: settings.autoCopy ? 'Tekst skopiowany do schowka.' : 'Odczyt zakończony.' });
@@ -170,6 +187,15 @@ if (!app.requestSingleInstanceLock()) app.quit();
 else {
   app.on('second-instance', () => { if (main) showMain(); });
   app.whenReady().then(async () => {
+    statePath = path.join(app.getPath('userData'), 'state.json');
+    const savedState = readAppState(statePath);
+    if (savedState.settings && typeof savedState.settings === 'object') {
+      settings = { ...defaultSettings, ...Object.fromEntries(Object.keys(defaultSettings)
+        .filter(key => typeof savedState.settings[key] === 'boolean')
+        .map(key => [key, savedState.settings[key]])) };
+    }
+    if (settings.keepHistory && settings.persistHistory) history.load(savedState.history);
+
     if (process.platform === 'win32') {
       // Keep the same Windows identity in development and in packaged builds.
       // Using electron.exe here makes Windows group the app with Electron and
@@ -198,6 +224,7 @@ else {
     ipcMain.on('set-settings', (event, next) => {
       if (event.sender !== main.webContents || !next || typeof next !== 'object') return;
       settings = { ...settings, ...Object.fromEntries(Object.keys(settings).filter(key => typeof next[key] === 'boolean').map(key => [key, next[key]])) };
+      persistState();
     });
     ipcMain.on('capture', event => { if (event.sender === main.webContents) capture(); });
     ipcMain.on('selection', recognize);
@@ -226,15 +253,17 @@ else {
     ipcMain.on('delete-history', (event, id) => {
       if (event.sender !== main.webContents) return;
       history.remove(id);
+      persistState();
     });
     ipcMain.on('clear-history', event => {
       if (event.sender !== main.webContents) return;
       history.clear();
+      persistState();
     });
     status.shortcut = globalShortcut.register('Super+Shift+Q', capture);
     send(status.shortcut ? 'Gotowy do zaznaczania' : 'Skrót Win + Shift + Q jest zajęty. Zamknij aplikację, która go używa, i uruchom tę ponownie.');
     await main.loadFile(path.join(__dirname, 'index.html'));
   });
   app.on('window-all-closed', () => {});
-  app.on('before-quit', () => { quitting = true; closeOverlays(); globalShortcut.unregisterAll(); if (worker) worker.terminate(); });
+  app.on('before-quit', () => { quitting = true; persistState(); closeOverlays(); globalShortcut.unregisterAll(); if (worker) worker.terminate(); });
 }
