@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { captureDisplays, withTimeout } = require('../src/capture');
+const { captureDisplays, withTimeout } = require('../src/main/capture');
 test('pairs explicit display IDs even when source order differs', async () => {
   const a = { isEmpty: () => false }, b = { isEmpty: () => false };
   const displays = [1, 2].map(id => ({ id, size: { width: 100, height: 100 }, scaleFactor: 1 }));

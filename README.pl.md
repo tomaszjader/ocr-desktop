@@ -39,6 +39,15 @@ Całe rozpoznawanie tekstu odbywa się lokalnie. Dołączone dane językowe pols
 
 ## Rozwój projektu
 
+Kod źródłowy jest podzielony według odpowiedzialności:
+
+- `src/main/` — główny proces Electrona, OCR, przechwytywanie ekranu, historia i lokalny zapis.
+- `src/main/platform/` — pomocnicze skrypty zależne od Windows.
+- `src/renderer/` — okna aplikacji, mostek preload, style i skrypty interfejsu.
+- `src/shared/` — czyste funkcje współdzielone przez proces główny i testy.
+- `src/assets/` — zasoby aplikacji, w tym ikona Windows.
+- `test/` — testy jednostkowe; `scripts/` — pomocnicze skrypty budowania i E2E.
+
 Wymagania:
 
 - Windows 10 lub 11 dla pełnego działania aplikacji desktopowej.

@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { cropRectangle } = require('../src/geometry');
+const { cropRectangle } = require('../src/shared/geometry');
 test('maps logical coordinates to screenshot pixels at 150% DPI', () => {
   assert.deepEqual(cropRectangle({ x: 100, y: 50, width: 200, height: 100 }, { width: 1920, height: 1080 }, { width: 2880, height: 1620 }), { x: 150, y: 75, width: 300, height: 150 });
 });

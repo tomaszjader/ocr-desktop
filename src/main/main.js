@@ -1,14 +1,14 @@
 const { app, BrowserWindow, ipcMain, globalShortcut, screen, desktopCapturer, clipboard, Tray, Menu, nativeImage, Notification } = require('electron');
 const path = require('node:path');
-const { cropRectangle } = require('./geometry');
+const { cropRectangle } = require('../shared/geometry');
 const { makeWorker } = require('./ocr');
 const { captureDisplays, withTimeout } = require('./capture');
 const { createHistoryStore } = require('./history');
-const { normalizeOcrText } = require('./text');
+const { normalizeOcrText } = require('../shared/text');
 const { readAppState, writeAppState } = require('./storage');
 const APP_USER_MODEL_ID = 'pl.tekstzekranu.ocrdesktop';
 const TOAST_ACTIVATOR_CLSID = '{6F460C4A-1A97-4ED0-9C0F-8C953C9CE39B}';
-const APP_ICON = path.join(__dirname, 'icon.ico');
+const APP_ICON = path.join(__dirname, '..', 'assets', 'icon.ico');
 let main, tray, worker, busy = false, quitting = false;
 let captureId = 0, phase = 'idle', restoreMain = false;
 let overlays = [];
@@ -91,7 +91,7 @@ async function capture() {
     for (const { display, image } of captures) {
       const window = new BrowserWindow({ ...display.bounds, frame: false, thickFrame: false, transparent: false, resizable: false, icon: APP_ICON,
         movable: false, skipTaskbar: true, alwaysOnTop: true, show: false, enableLargerThanScreen: true,
-        webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true } });
+        webPreferences: { preload: path.join(__dirname, '..', 'renderer', 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true } });
       window.setAlwaysOnTop(true, 'screen-saver');
       window.setBounds(display.bounds);
       window.setFullScreen(true);
@@ -99,7 +99,7 @@ async function capture() {
       overlays.push(item);
       window.webContents.on('render-process-gone', () => { if (overlays.includes(item)) cancel(); });
       window.on('closed', () => { if (overlays.includes(item)) cancel(); });
-      await withTimeout(window.loadFile(path.join(__dirname, 'overlay.html')), 10000, 'Nie udało się otworzyć zaznaczania.');
+      await withTimeout(window.loadFile(path.join(__dirname, '..', 'renderer', 'overlay.html')), 10000, 'Nie udało się otworzyć zaznaczania.');
       if (currentId !== captureId) return;
       const ready = new Promise((resolve, reject) => {
         const listener = (event, success) => {
@@ -207,7 +207,7 @@ else {
     const appIcon = nativeImage.createFromPath(APP_ICON);
     if (appIcon.isEmpty()) throw new Error(`Nie udało się wczytać ikony aplikacji: ${APP_ICON}`);
     main = new BrowserWindow({ width: 1120, height: 780, minWidth: 760, minHeight: 620, backgroundColor: '#080d18', icon: APP_ICON, autoHideMenuBar: true,
-      webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true } });
+      webPreferences: { preload: path.join(__dirname, '..', 'renderer', 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true } });
     // Explicitly set the window icon as well, so the taskbar and the window
     // chrome use the same asset as the executable and system tray.
     main.setIcon(appIcon);
@@ -262,7 +262,7 @@ else {
     });
     status.shortcut = globalShortcut.register('Super+Shift+Q', capture);
     send(status.shortcut ? 'Gotowy do zaznaczania' : 'Skrót Win + Shift + Q jest zajęty. Zamknij aplikację, która go używa, i uruchom tę ponownie.');
-    await main.loadFile(path.join(__dirname, 'index.html'));
+    await main.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
   });
   app.on('window-all-closed', () => {});
   app.on('before-quit', () => { quitting = true; persistState(); closeOverlays(); globalShortcut.unregisterAll(); if (worker) worker.terminate(); });

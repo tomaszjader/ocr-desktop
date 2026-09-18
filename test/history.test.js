@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { createHistoryStore } = require('../src/history');
+const { createHistoryStore } = require('../src/main/history');
 
 test('history keeps newest unique OCR results within its limit', () => {
   const history = createHistoryStore(2);

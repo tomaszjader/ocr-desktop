@@ -2,7 +2,7 @@
   "name": "ocr-desktop",
   "version": "1.0.4",
   "description": "Lokalny OCR zaznaczonego fragmentu ekranu",
-  "main": "src/main.js",
+  "main": "src/main/main.js",
   "scripts": {
     "start": "electron .",
     "test": "node --test",
@@ -36,7 +36,7 @@
   "build": {
     "appId": "pl.tekstzekranu.ocrdesktop",
     "productName": "Tekst z ekranu",
-    "icon": "src/icon.ico",
+    "icon": "src/assets/icon.ico",
     "asar": false,
     "files": [
       "src/**/*",

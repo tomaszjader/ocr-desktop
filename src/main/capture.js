@@ -27,7 +27,7 @@ async function captureDisplays(displays, { desktopCapturer, screen, nativeImage 
   const rectangles = displays.map(d => ({ id: String(d.id), ...screen.dipToScreenRect(null, d.bounds) }));
   const powershell = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
   const { stdout } = await execute(powershell, ['-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
-    '-File', path.join(__dirname, 'capture-windows.ps1'), '-Rectangles', Buffer.from(JSON.stringify(rectangles)).toString('base64')],
+    '-File', path.join(__dirname, 'platform', 'capture-windows.ps1'), '-Rectangles', Buffer.from(JSON.stringify(rectangles)).toString('base64')],
   { windowsHide: true, timeout: 12000, maxBuffer: 128 * 1024 * 1024, encoding: 'utf8' });
   const results = JSON.parse(stdout.replace(/^\uFEFF/, ''));
   return displays.map(display => {

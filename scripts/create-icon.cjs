@@ -127,6 +127,6 @@ images.forEach(({ size, data }, index) => {
   imageOffset += data.length;
 });
 
-const output = path.join(__dirname, '..', 'src', 'icon.ico');
+const output = path.join(__dirname, '..', 'src', 'assets', 'icon.ico');
 fs.writeFileSync(output, Buffer.concat([header, ...images.map(image => image.data)]));
 console.log(`Utworzono ${output} (${sizes.join(', ')} px)`);

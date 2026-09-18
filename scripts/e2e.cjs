@@ -13,7 +13,7 @@ async function until(fn, timeout = 20000) {
   throw new Error('Timed out waiting for application state');
 }
 const overlayWindows = () => BrowserWindow.getAllWindows().filter(w => w.webContents.getURL().endsWith('/overlay.html'));
-require(path.join(appRoot, 'src/main.js'));
+require(path.join(appRoot, 'src', 'main', 'main.js'));
 const originalClipboard = clipboard.readText();
 let lastTestText;
 app.whenReady().then(async () => {

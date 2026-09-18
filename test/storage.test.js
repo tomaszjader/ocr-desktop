@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { readAppState, writeAppState } = require('../src/storage');
+const { readAppState, writeAppState } = require('../src/main/storage');
 
 test('persists and restores application state as JSON', () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ocr-desktop-'));

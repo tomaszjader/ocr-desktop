@@ -39,6 +39,15 @@ All OCR processing is local. The bundled Polish and English language data is cop
 
 ## Development
 
+The source is organized by responsibility:
+
+- `src/main/` — Electron main process, OCR, screen capture, history, and local storage.
+- `src/main/platform/` — Windows-specific capture helpers.
+- `src/renderer/` — application windows, preload bridge, styles, and renderer scripts.
+- `src/shared/` — pure utilities shared by the main process and tests.
+- `src/assets/` — packaged application assets such as the Windows icon.
+- `test/` — unit tests; `scripts/` — build and end-to-end helpers.
+
 Requirements:
 
 - Windows 10 or 11 for the full desktop workflow.
