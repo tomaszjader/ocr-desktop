@@ -22,3 +22,23 @@ test('uses an empty state when the state file is missing or invalid', () => {
   assert.deepEqual(readAppState(filePath), {});
   fs.rmSync(directory, { recursive: true, force: true });
 });
+
+test('rejects oversized or non-object state files', () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ocr-desktop-'));
+  const filePath = path.join(directory, 'state.json');
+  fs.writeFileSync(filePath, '[]', 'utf8');
+  assert.deepEqual(readAppState(filePath), {});
+  fs.writeFileSync(filePath, 'x'.repeat(10 * 1024 * 1024 + 1), 'utf8');
+  assert.deepEqual(readAppState(filePath), {});
+  fs.rmSync(directory, { recursive: true, force: true });
+});
+
+test('writes through a temporary file and leaves no temporary files behind', () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ocr-desktop-'));
+  const filePath = path.join(directory, 'state.json');
+  writeAppState(filePath, { settings: { autoCopy: true } });
+  writeAppState(filePath, { settings: { autoCopy: false } });
+  assert.deepEqual(readAppState(filePath), { settings: { autoCopy: false } });
+  assert.deepEqual(fs.readdirSync(directory), ['state.json']);
+  fs.rmSync(directory, { recursive: true, force: true });
+});

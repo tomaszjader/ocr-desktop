@@ -37,7 +37,10 @@
     "appId": "pl.tekstzekranu.ocrdesktop",
     "productName": "Tekst z ekranu",
     "icon": "src/assets/icon.ico",
-    "asar": false,
+    "asar": true,
+    "asarUnpack": [
+      "src/main/platform/**"
+    ],
     "files": [
       "src/**/*",
       "package.json"
