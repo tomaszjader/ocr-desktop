@@ -22,6 +22,16 @@ let lastHistoryText = '';
 let toastTimer;
 let currentSettings = { keepHistory: true, persistHistory: false };
 
+const shortcutModifier = document.getElementById('shortcut-modifier');
+const shortcutGuide = document.getElementById('shortcut-guide');
+if (window.ocr.platform === 'darwin') {
+  shortcutModifier.textContent = '⌥';
+  shortcutGuide.textContent = 'Wciśnij ⌥ + Shift + Q w dowolnej aplikacji.';
+} else if (window.ocr.platform !== 'win32') {
+  shortcutModifier.textContent = 'Super';
+  shortcutGuide.textContent = 'Wciśnij Super + Shift + Q w dowolnej aplikacji.';
+}
+
 function classify(status) {
   const message = status.message || '';
   if (status.busy) return 'scanning';
@@ -155,8 +165,8 @@ document.getElementById('info-close').addEventListener('click', () => { document
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape') hideDrawers();
   if (event.altKey && event.key.toLowerCase() === 's') { event.preventDefault(); openView('readout'); }
-  if (event.ctrlKey && event.key.toLowerCase() === 'h') { event.preventDefault(); openView('history'); }
-  if (event.ctrlKey && event.key.toLowerCase() === 't') { event.preventDefault(); openView('models'); }
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'h') { event.preventDefault(); openView('history'); }
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 't') { event.preventDefault(); openView('models'); }
   if (event.altKey && event.key === ',') { event.preventDefault(); openView('settings'); }
 });
 

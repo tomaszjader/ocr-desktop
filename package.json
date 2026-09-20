@@ -7,9 +7,15 @@
     "start": "electron .",
     "test": "node --test",
     "pre-dist": "node scripts/create-icon.cjs",
-    "dist": "electron-builder --win portable",
+    "pre-dist:win": "node scripts/create-icon.cjs",
+    "pre-dist:mac": "node scripts/create-icon.cjs",
+    "dist": "npm run dist:win",
+    "dist:win": "electron-builder --win portable",
+    "dist:mac": "electron-builder --mac dmg zip",
     "postdist": "node scripts/copy-portable.cjs",
+    "postdist:win": "node scripts/copy-portable.cjs",
     "pack": "electron-builder --dir",
+    "pack:mac": "electron-builder --mac --dir",
     "test:e2e": "electron scripts/e2e.cjs"
   },
   "repository": {
@@ -36,7 +42,7 @@
   "build": {
     "appId": "pl.tekstzekranu.ocrdesktop",
     "productName": "Tekst z ekranu",
-    "icon": "src/assets/icon.ico",
+    "icon": "src/assets/icon.png",
     "asar": true,
     "asarUnpack": [
       "src/main/platform/**"
@@ -46,8 +52,14 @@
       "package.json"
     ],
     "win": {
+      "icon": "src/assets/icon.ico",
       "target": "portable",
       "signExecutable": false
+    },
+    "mac": {
+      "icon": "src/assets/icon.png",
+      "target": ["dmg", "zip"],
+      "category": "public.app-category.utilities"
     },
     "portable": {
     "artifactName": "Tekst-z-ekranu-${version}.exe"

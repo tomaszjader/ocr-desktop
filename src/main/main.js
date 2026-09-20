@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, globalShortcut, screen, desktopCapturer, clipboard, Tray, Menu, nativeImage, Notification } = require('electron');
+const { app, BrowserWindow, ipcMain, globalShortcut, screen, desktopCapturer, clipboard, Tray, Menu, nativeImage, Notification, shell, systemPreferences } = require('electron');
 const path = require('node:path');
 const { cropRectangle } = require('../shared/geometry');
 const { makeWorker } = require('./ocr');
@@ -8,7 +8,11 @@ const { normalizeOcrText } = require('../shared/text');
 const { readAppState, writeAppState } = require('./storage');
 const APP_USER_MODEL_ID = 'pl.tekstzekranu.ocrdesktop';
 const TOAST_ACTIVATOR_CLSID = '{6F460C4A-1A97-4ED0-9C0F-8C953C9CE39B}';
-const APP_ICON = path.join(__dirname, '..', 'assets', 'icon.ico');
+const APP_ICON = path.join(__dirname, '..', 'assets', process.platform === 'win32' ? 'icon.ico' : 'icon.png');
+const CAPTURE_SHORTCUT = process.platform === 'darwin' ? 'Alt+Shift+Q' : 'Super+Shift+Q';
+const CAPTURE_SHORTCUT_LABEL = process.platform === 'darwin' ? '⌥ + Shift + Q' : process.platform === 'win32' ? 'Win + Shift + Q' : 'Super + Shift + Q';
+const PASTE_SHORTCUT_LABEL = process.platform === 'darwin' ? '⌘ + V' : 'Ctrl + V';
+const SCREEN_CAPTURE_SETTINGS_URL = 'x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture';
 let main, tray, worker, busy = false, quitting = false;
 let captureId = 0, phase = 'idle', restoreMain = false;
 let overlays = [];
@@ -41,6 +45,17 @@ const notify = body => {
   notification.on('click', showMain);
   notification.show();
 };
+async function ensureScreenCaptureAccess() {
+  if (process.platform !== 'darwin' || typeof systemPreferences?.getMediaAccessStatus !== 'function') return;
+  const access = systemPreferences.getMediaAccessStatus('screen');
+  if (access === 'granted') return;
+  try { await shell.openExternal(SCREEN_CAPTURE_SETTINGS_URL); } catch {}
+  const error = new Error(access === 'restricted'
+    ? 'macOS ogranicza dostęp do nagrywania ekranu. Włącz go w Ustawieniach systemowych.'
+    : 'Włącz „Nagrywanie ekranu” dla aplikacji w Ustawieniach systemowych, a następnie spróbuj ponownie.');
+  error.code = 'SCREEN_CAPTURE_PERMISSION';
+  throw error;
+}
 function persistState() {
   if (!statePath) return;
   try {
@@ -83,6 +98,7 @@ async function capture() {
   phase = 'capture';
   send('Przygotowuję zaznaczanie ekranu…');
   try {
+    await ensureScreenCaptureAccess();
     restoreMain = main.isVisible();
     if (restoreMain) { main.hide(); await new Promise(resolve => setTimeout(resolve, 180)); }
     const displays = screen.getAllDisplays();
@@ -94,7 +110,12 @@ async function capture() {
         webPreferences: { preload: path.join(__dirname, '..', 'renderer', 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true } });
       window.setAlwaysOnTop(true, 'screen-saver');
       window.setBounds(display.bounds);
-      window.setFullScreen(true);
+      if (process.platform === 'darwin') {
+        window.setFullScreenable(false);
+        window.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+      } else if (process.platform === 'win32') {
+        window.setFullScreen(true);
+      }
       const item = { window, display, image };
       overlays.push(item);
       window.webContents.on('render-process-gone', () => { if (overlays.includes(item)) cancel(); });
@@ -115,14 +136,16 @@ async function capture() {
       if (currentId !== captureId) return;
     }
     phase = 'selection';
-    send('Zaznacz fragment ekranu. Esc lub ponownie Win + Shift + Q — anuluj.');
+    send(`Zaznacz fragment ekranu. Esc lub ponownie ${CAPTURE_SHORTCUT_LABEL} — anuluj.`);
     for (const item of overlays) item.window.show();
     const active = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
     overlays.find(i => i.display.id === active.id)?.window.focus();
   } catch (error) {
     if (currentId !== captureId) return;
     closeOverlays(); busy = false; phase = 'idle'; restoreWindow();
-    send(`Błąd: ${error.message}`, { text: '' }); notify(status.message);
+    send(`Błąd: ${error.message}`, { text: '' });
+    if (error.code === 'SCREEN_CAPTURE_PERMISSION') notify('Nadaj aplikacji dostęp do nagrywania ekranu w Ustawieniach systemowych.');
+    else notify(status.message);
   }
 }
 async function recognize(event, rect) {
@@ -167,7 +190,7 @@ async function recognize(event, rect) {
     busy = false; phase = 'idle';
     if (text) {
       send(settings.autoCopy ? 'Tekst skopiowany do schowka' : 'Odczyt gotowy do skopiowania', { text, copyNotice: settings.autoCopy ? 'Tekst skopiowany do schowka.' : 'Odczyt zakończony.' });
-      if (settings.autoCopy) notify('Tekst skopiowany. Wklej go za pomocą Ctrl + V.');
+      if (settings.autoCopy) notify(`Tekst skopiowany. Wklej go za pomocą ${PASTE_SHORTCUT_LABEL}.`);
     }
     else {
       send('Nie znaleziono tekstu. Zaznacz wyraźniejszy fragment.', { text: '' });
@@ -208,13 +231,14 @@ else {
     if (appIcon.isEmpty()) throw new Error(`Nie udało się wczytać ikony aplikacji: ${APP_ICON}`);
     main = new BrowserWindow({ width: 1120, height: 780, minWidth: 760, minHeight: 620, backgroundColor: '#080d18', icon: APP_ICON, autoHideMenuBar: true,
       webPreferences: { preload: path.join(__dirname, '..', 'renderer', 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true } });
-    // Explicitly set the window icon as well, so the taskbar and the window
-    // chrome use the same asset as the executable and system tray.
-    main.setIcon(appIcon);
+    // Explicitly set the window icon on platforms that expose window chrome
+    // icons. macOS uses the app bundle icon for the window and Dock instead.
+    if (process.platform !== 'darwin') main.setIcon(appIcon);
+    if (process.platform === 'darwin' && app.dock) app.dock.setIcon(appIcon);
     main.on('close', event => { if (!quitting) { event.preventDefault(); main.hide(); } });
     tray = new Tray(appIcon.resize({ width: 16, height: 16, quality: 'best' }));
     tray.setContextMenu(Menu.buildFromTemplate([
-      { label: 'Zaznacz tekst (Win + Shift + Q)', click: capture }, { label: 'Otwórz aplikację', click: showMain },
+      { label: `Zaznacz tekst (${CAPTURE_SHORTCUT_LABEL})`, click: capture }, { label: 'Otwórz aplikację', click: showMain },
       { type: 'separator' }, { label: 'Zakończ', click: () => app.quit() }
     ]));
     tray.on('double-click', showMain);
@@ -260,10 +284,11 @@ else {
       history.clear();
       persistState();
     });
-    status.shortcut = globalShortcut.register('Super+Shift+Q', capture);
-    send(status.shortcut ? 'Gotowy do zaznaczania' : 'Skrót Win + Shift + Q jest zajęty. Zamknij aplikację, która go używa, i uruchom tę ponownie.');
+    status.shortcut = globalShortcut.register(CAPTURE_SHORTCUT, capture);
+    send(status.shortcut ? 'Gotowy do zaznaczania' : `Skrót ${CAPTURE_SHORTCUT_LABEL} jest zajęty. Zamknij aplikację, która go używa, i uruchom tę ponownie.`);
     await main.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
   });
+  app.on('activate', showMain);
   app.on('window-all-closed', () => {});
   app.on('before-quit', () => { quitting = true; persistState(); closeOverlays(); globalShortcut.unregisterAll(); if (worker) worker.terminate(); });
 }

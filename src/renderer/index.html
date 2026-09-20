@@ -57,7 +57,7 @@
                   <svg viewBox="0 0 24 24" fill="none"><path d="M4 9V5h4M20 9V5h-4M4 15v4h4M20 15v4h-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                 </span>
                 <span class="action-copy"><strong id="capture-label">Zaznacz fragment ekranu</strong><small id="capture-description">AUTOMATYCZNE ROZPOZNANIE OCR</small></span>
-                <span class="shortcut"><kbd>Win</kbd><b>+</b><kbd>Shift</kbd><b>+</b><kbd>Q</kbd></span>
+                <span class="shortcut"><kbd id="shortcut-modifier">Win</kbd><b>+</b><kbd>Shift</kbd><b>+</b><kbd>Q</kbd></span>
               </button>
               <div class="capture-meta"><span>Ekran główny · obsługa wielu monitorów</span><span id="capture-hint">Gotowy do zaznaczania</span></div>
             </div>
@@ -66,7 +66,7 @@
 
             <button id="guide-toggle" class="guide-toggle" type="button" aria-expanded="false" aria-controls="guide-content"><span><span class="guide-icon">?</span> Jak to działa w 3 krokach?</span><span class="guide-chevron">+</span></button>
             <div id="guide-content" class="guide-content" hidden>
-              <div class="guide-step"><span>01 / SKRÓT</span><strong>Użyj klawiszy</strong><p>Wciśnij Win + Shift + Q w dowolnej aplikacji.</p></div>
+              <div class="guide-step"><span>01 / SKRÓT</span><strong>Użyj klawiszy</strong><p id="shortcut-guide">Wciśnij Win + Shift + Q w dowolnej aplikacji.</p></div>
               <div class="guide-step"><span>02 / KADR</span><strong>Zaznacz pole</strong><p>Przeciągnij celownik nad wiersz, tabelę lub kod.</p></div>
               <div class="guide-step"><span>03 / SCHOWEK</span><strong>Czysty tekst</strong><p>Wynik trafia prosto do pamięci podręcznej.</p></div>
             </div>

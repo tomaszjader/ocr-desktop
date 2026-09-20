@@ -13,19 +13,20 @@ async function until(fn, timeout = 20000) {
   throw new Error('Timed out waiting for application state');
 }
 const overlayWindows = () => BrowserWindow.getAllWindows().filter(w => w.webContents.getURL().endsWith('/overlay.html'));
+const captureShortcut = process.platform === 'darwin' ? 'Alt+Shift+Q' : 'Super+Shift+Q';
 require(path.join(appRoot, 'src', 'main', 'main.js'));
 const originalClipboard = clipboard.readText();
 let lastTestText;
 app.whenReady().then(async () => {
   const main = await until(() => BrowserWindow.getAllWindows().find(w => w.webContents.getURL().endsWith('/index.html') && !w.webContents.isLoading()));
-  assert(globalShortcut.isRegistered('Super+Shift+Q'), 'Global shortcut must register; close the other app instance first.');
+  assert(globalShortcut.isRegistered(captureShortcut), 'Global shortcut must register; close the other app instance first.');
   console.log('PASS global shortcut registered');
   for (const [index, display] of screen.getAllDisplays().entries()) {
     const fixture = new BrowserWindow({ x: display.bounds.x + 60, y: display.bounds.y + 70,
       width: 900, height: 240, frame: false, thickFrame: false, show: false, alwaysOnTop: true, backgroundColor: '#ffffff' });
     await fixture.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent('<html><body style="margin:0;background:white;color:black;font:38px Arial;padding:45px 20px">Za\u017c\u00f3\u0142\u0107 g\u0119\u015bl\u0105 ja\u017a\u0144. Hello OCR 123.</body></html>'));
     fixture.show(); fixture.focus(); await delay(300);
-    if (index === 0) {
+    if (index === 0 && process.platform === 'win32') {
       await execute('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', path.join(__dirname, 'press-capture-shortcut.ps1')], { windowsHide: true, timeout: 10000 });
     } else await main.webContents.executeJavaScript('document.getElementById("capture").click()');
     await until(() => overlayWindows().length === screen.getAllDisplays().length && overlayWindows().every(w => w.isVisible()));
