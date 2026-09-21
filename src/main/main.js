@@ -17,6 +17,7 @@ let main, tray, worker, busy = false, quitting = false;
 let captureId = 0, phase = 'idle', restoreMain = false;
 let overlays = [];
 let ocrRun = null;
+let pendingOcrCleanup = Promise.resolve();
 const history = createHistoryStore();
 const defaultSettings = { autoCopy: true, keepHistory: true, persistHistory: false, normalizeText: true };
 let settings = { ...defaultSettings };
@@ -73,9 +74,9 @@ function closeOverlays() {
   for (const item of closing) if (!item.window.isDestroyed()) item.window.destroy();
 }
 function stopOcrRun(run) {
-  if (!run?.worker) return;
+  if (!run?.worker) return Promise.resolve();
   if (worker === run.worker) worker = null;
-  run.worker.terminate().catch(() => {});
+  return run.worker.terminate().catch(() => {});
 }
 function restoreWindow() {
   if (restoreMain && !quitting && main && !main.isDestroyed()) showMain();
@@ -85,7 +86,7 @@ function cancel() {
   const run = phase === 'ocr' ? ocrRun : null;
   if (run) {
     ocrRun = null;
-    stopOcrRun(run);
+    run.stopPromise = stopOcrRun(run);
   }
   captureId++;
   closeOverlays(); busy = false; phase = 'idle'; restoreWindow();
@@ -98,6 +99,11 @@ async function capture() {
   phase = 'capture';
   send('Przygotowuję zaznaczanie ekranu…');
   try {
+    // A cancelled OCR run may still be unwinding after its worker was asked
+    // to terminate. Do not start a new capture while that cleanup is pending,
+    // otherwise two Tesseract workers can briefly coexist and spike memory.
+    await pendingOcrCleanup;
+    if (currentId !== captureId || quitting) return;
     await ensureScreenCaptureAccess();
     restoreMain = main.isVisible();
     if (restoreMain) { main.hide(); await new Promise(resolve => setTimeout(resolve, 180)); }
@@ -153,6 +159,8 @@ async function recognize(event, rect) {
   if (!item) return;
   const currentId = captureId;
   let png;
+  let run = null;
+  let resolveRun = () => {};
   try {
     const region = cropRectangle(rect, item.display.bounds, item.image.getSize());
     let cropped = item.image.crop(region);
@@ -161,8 +169,10 @@ async function recognize(event, rect) {
     phase = 'ocr';
     closeOverlays();
     send('Odczytuję tekst lokalnie…');
-    const run = { id: currentId, worker: null };
+    const runFinished = new Promise(resolve => { resolveRun = resolve; });
+    run = { id: currentId, worker: null, stopPromise: Promise.resolve() };
     ocrRun = run;
+    pendingOcrCleanup = runFinished;
     if (!worker) {
       const initializing = makeWorker(app.getPath('userData'), progress => {
         if (phase === 'ocr' && progress.status === 'recognizing text') send(`Odczytuję tekst… ${Math.round(progress.progress * 100)}%`);
@@ -203,7 +213,13 @@ async function recognize(event, rect) {
     if (worker) { await worker.terminate().catch(() => {}); worker = null; }
     send(`Błąd OCR: ${error.message}`, { text: '' }); notify(status.message);
   } finally {
-    if (ocrRun?.id === currentId) ocrRun = null;
+    // If cancel() already requested termination, wait for it before allowing
+    // the next capture to proceed.
+    if (run) {
+      await run.stopPromise;
+      if (ocrRun?.id === currentId) ocrRun = null;
+      resolveRun();
+    }
   }
 }
 if (!app.requestSingleInstanceLock()) app.quit();
