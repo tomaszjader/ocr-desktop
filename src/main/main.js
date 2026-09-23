@@ -268,7 +268,9 @@ else {
     });
     ipcMain.on('capture', event => { if (event.sender === main.webContents) capture(); });
     ipcMain.on('selection', recognize);
-    ipcMain.on('cancel', event => { if (overlays.some(i => i.window.webContents === event.sender)) cancel(); });
+    ipcMain.on('cancel', event => {
+      if (busy && (event.sender === main.webContents || overlays.some(i => i.window.webContents === event.sender))) cancel();
+    });
     ipcMain.on('copy', async event => {
       if (event.sender !== main.webContents || !status.text) return;
       try { await clipboard.writeText(status.text); send('Tekst skopiowany do schowka', { copyNotice: 'Skopiowano do schowka.' }); }
