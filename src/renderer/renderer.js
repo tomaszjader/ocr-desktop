@@ -177,6 +177,6 @@ window.ocr.getSettings().then(settings => {
 document.querySelectorAll('[data-setting]').forEach(input => input.addEventListener('change', () => {
   currentSettings[input.dataset.setting] = input.checked;
   window.ocr.setSettings({ [input.dataset.setting]: input.checked });
-  showToast('Ustawienie zapisane.');
-  if (input.dataset.setting === 'persistHistory') refreshHistory();
+  showToast(input.dataset.setting === 'keepHistory' && !input.checked ? 'Historia została usunięta.' : 'Ustawienie zapisane.');
+  if (input.dataset.setting === 'persistHistory' || input.dataset.setting === 'keepHistory') refreshHistory();
 }));
