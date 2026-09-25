@@ -264,6 +264,7 @@ else {
     ipcMain.on('set-settings', (event, next) => {
       if (event.sender !== main.webContents || !next || typeof next !== 'object') return;
       settings = { ...settings, ...Object.fromEntries(Object.keys(settings).filter(key => typeof next[key] === 'boolean').map(key => [key, next[key]])) };
+      if (!settings.keepHistory) history.clear();
       persistState();
     });
     ipcMain.on('capture', event => { if (event.sender === main.webContents) capture(); });
