@@ -33,6 +33,29 @@ test('rejects oversized or non-object state files', () => {
   fs.rmSync(directory, { recursive: true, force: true });
 });
 
+test('keeps settings and the newest history entry when saved history exceeds the read limit', () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ocr-desktop-'));
+  const filePath = path.join(directory, 'state.json');
+  const newer = { id: 'newer', text: 'ą'.repeat(3 * 1024 * 1024), createdAt: '2026-01-02T00:00:00.000Z' };
+  const older = { id: 'older', text: 'ć'.repeat(3 * 1024 * 1024), createdAt: '2026-01-01T00:00:00.000Z' };
+  writeAppState(filePath, { settings: { autoCopy: false }, history: [newer, older] });
+  assert(fs.statSync(filePath).size <= 10 * 1024 * 1024);
+  assert.deepEqual(readAppState(filePath), { settings: { autoCopy: false }, history: [newer] });
+  fs.rmSync(directory, { recursive: true, force: true });
+});
+
+test('skips one oversized OCR result and still saves smaller history entries', () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ocr-desktop-'));
+  const filePath = path.join(directory, 'state.json');
+  const smaller = { id: 'smaller', text: 'tekst', createdAt: '2026-01-01T00:00:00.000Z' };
+  writeAppState(filePath, { settings: { keepHistory: true }, history: [
+    { id: 'oversized', text: 'x'.repeat(10 * 1024 * 1024), createdAt: '2026-01-02T00:00:00.000Z' },
+    smaller
+  ] });
+  assert.deepEqual(readAppState(filePath), { settings: { keepHistory: true }, history: [smaller] });
+  fs.rmSync(directory, { recursive: true, force: true });
+});
+
 test('writes through a temporary file and leaves no temporary files behind', () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ocr-desktop-'));
   const filePath = path.join(directory, 'state.json');

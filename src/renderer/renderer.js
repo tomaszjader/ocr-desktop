@@ -106,7 +106,7 @@ async function refreshHistory() {
   const list = document.getElementById('history-list');
   const count = document.getElementById('history-count');
   const entries = await window.ocr.getHistory();
-  count.textContent = `${entries.length} ${entries.length === 1 ? 'wpis' : 'wpisów'} · ${currentSettings.persistHistory ? 'zapisane lokalnie' : 'tylko w pamięci'}`;
+  count.textContent = `${entries.length} ${entries.length === 1 ? 'wpis' : 'wpisów'} · ${currentSettings.persistHistory ? 'zapis między uruchomieniami włączony' : 'tylko w pamięci'}`;
   list.replaceChildren();
   if (!entries.length) {
     const empty = document.createElement('div');

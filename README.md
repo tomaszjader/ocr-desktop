@@ -35,7 +35,7 @@ Empty OCR results do not overwrite the clipboard.
 
 ## Privacy
 
-All OCR processing is local. The bundled Polish and English language data is copied to the application's local cache on first use. No screen image or recognized text is uploaded. Settings persist locally between launches. History remains in memory unless optional local persistence is enabled in Settings.
+All OCR processing is local. The bundled Polish and English language data is copied to the application's local cache on first use. No screen image or recognized text is uploaded. Settings persist locally between launches. History remains in memory unless optional local persistence is enabled in Settings. The state file has a 10 MB limit; if history exceeds it, the newest entries that fit are saved. Other entries remain available until the app closes.
 
 ## Development
 

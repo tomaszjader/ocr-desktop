@@ -35,7 +35,7 @@ Pusty wynik OCR nie nadpisuje zawartości schowka.
 
 ## Prywatność
 
-Całe rozpoznawanie tekstu odbywa się lokalnie. Dołączone dane językowe polskiego i angielskiego są przy pierwszym użyciu kopiowane do lokalnego cache aplikacji. Żaden obraz ekranu ani rozpoznany tekst nie jest wysyłany do internetu. Ustawienia są przechowywane lokalnie między uruchomieniami. Historia pozostaje tylko w pamięci, chyba że w ustawieniach włączysz jej lokalny zapis.
+Całe rozpoznawanie tekstu odbywa się lokalnie. Dołączone dane językowe polskiego i angielskiego są przy pierwszym użyciu kopiowane do lokalnego cache aplikacji. Żaden obraz ekranu ani rozpoznany tekst nie jest wysyłany do internetu. Ustawienia są przechowywane lokalnie między uruchomieniami. Historia pozostaje tylko w pamięci, chyba że w ustawieniach włączysz jej lokalny zapis. Plik stanu ma limit 10 MB; gdy historia go przekroczy, aplikacja zapisuje najnowsze wpisy, które się mieszczą. Pozostałe są dostępne do końca bieżącej sesji.
 
 ## Rozwój projektu
 
