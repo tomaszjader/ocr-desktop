@@ -2,7 +2,6 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('ocr', {
   platform: process.platform,
   capture: () => ipcRenderer.send('capture'),
-  openVoice: () => ipcRenderer.send('open-voice'),
   select: rect => ipcRenderer.send('selection', rect),
   cancel: () => ipcRenderer.send('cancel'),
   imageReady: success => ipcRenderer.send('image-ready', success),

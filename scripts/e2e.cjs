@@ -18,7 +18,7 @@ require(path.join(appRoot, 'src', 'main', 'main.js'));
 const originalClipboard = clipboard.readText();
 let lastTestText;
 app.whenReady().then(async () => {
-  const main = await until(() => BrowserWindow.getAllWindows().find(w => w.webContents.getURL().endsWith('/renderer/index.html') && !w.webContents.isLoading()));
+  const main = await until(() => BrowserWindow.getAllWindows().find(w => w.webContents.getURL().endsWith('/index.html') && !w.webContents.isLoading()));
   assert(globalShortcut.isRegistered(captureShortcut), 'Global shortcut must register; close the other app instance first.');
   console.log('PASS global shortcut registered');
   for (const [index, display] of screen.getAllDisplays().entries()) {

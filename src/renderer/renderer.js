@@ -95,7 +95,6 @@ function hideDrawers() {
 }
 
 function openView(view) {
-  if (view === 'voice') { window.ocr.openVoice(); return; }
   hideDrawers();
   document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('is-active', item.dataset.view === view));
   if (view === 'history') { document.getElementById('history-panel').hidden = false; refreshHistory(); }

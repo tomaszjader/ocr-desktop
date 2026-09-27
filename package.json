@@ -4,26 +4,19 @@
   "description": "Lokalny OCR zaznaczonego fragmentu ekranu",
   "main": "src/main/main.js",
   "scripts": {
-    "prestart": "npm run build:voice",
     "start": "electron .",
-    "build:voice": "tsc -p src/voice-ui/tsconfig.json && vite build src/voice-ui --config src/voice-ui/vite.config.mjs",
     "test": "node --test",
     "pre-dist": "node scripts/create-icon.cjs",
-    "pre-dist:win": "node scripts/create-icon.cjs && npm run build:voice",
-    "pre-dist:mac": "node scripts/create-icon.cjs && npm run build:voice",
+    "pre-dist:win": "node scripts/create-icon.cjs",
+    "pre-dist:mac": "node scripts/create-icon.cjs",
     "dist": "npm run dist:win",
     "dist:win": "electron-builder --win portable",
     "dist:mac": "electron-builder --mac dmg zip",
     "postdist": "node scripts/copy-portable.cjs",
     "postdist:win": "node scripts/copy-portable.cjs",
-    "prepack": "npm run build:voice",
     "pack": "electron-builder --dir",
-    "prepack:mac": "npm run build:voice",
     "pack:mac": "electron-builder --mac --dir",
-    "pretest:e2e": "npm run build:voice",
-    "test:e2e": "electron scripts/e2e.cjs",
-    "pretest:voice": "npm run build:voice",
-    "test:voice": "electron scripts/voice-smoke.cjs"
+    "test:e2e": "electron scripts/e2e.cjs"
   },
   "repository": {
     "type": "git",
@@ -38,23 +31,13 @@
   },
   "homepage": "https://github.com/tomaszjader/ocr-desktop#readme",
   "dependencies": {
-    "@huggingface/transformers": "^4.3.0",
     "@tesseract.js-data/eng": "^1.0.0",
     "@tesseract.js-data/pol": "^1.0.0",
-    "lucide-react": "^1.48.0",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0",
     "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
-    "@types/node": "^26.6.3",
-    "@types/react": "^19.3.0",
-    "@types/react-dom": "^19.3.0",
-    "@vitejs/plugin-react": "^6.1.1",
     "electron": "^44.3.0",
-    "electron-builder": "^26.15.3",
-    "typescript": "^7.0.2",
-    "vite": "^8.3.1"
+    "electron-builder": "^26.15.3"
   },
   "build": {
     "appId": "pl.tekstzekranu.ocrdesktop",
@@ -74,18 +57,11 @@
     },
     "mac": {
       "icon": "src/assets/icon.png",
-      "target": [
-        "dmg",
-        "zip"
-      ],
-      "category": "public.app-category.utilities",
-      "extendInfo": {
-        "NSMicrophoneUsageDescription": "Nagrywanie notatek głosowych wymaga dostępu do mikrofonu.",
-        "NSAppleEventsUsageDescription": "Korekta tekstu wymaga kopiowania i wklejania zaznaczenia w aktywnej aplikacji."
-      }
+      "target": ["dmg", "zip"],
+      "category": "public.app-category.utilities"
     },
     "portable": {
-      "artifactName": "Tekst-z-ekranu-${version}.exe"
+    "artifactName": "Tekst-z-ekranu-${version}.exe"
     }
   }
 }

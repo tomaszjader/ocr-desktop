@@ -2,7 +2,7 @@
 
 `Tekst z ekranu` to desktopowa aplikacja OCR dla Windows i macOS zbudowana w Electronie. Zaznacz dowolny fragment ekranu, a lokalny silnik Tesseract OCR rozpozna tekst po polsku i angielsku, po czym skopiuje wynik do schowka.
 
-Moduł OCR działa offline: obrazy ekranu są przetwarzane lokalnie w pamięci, nie są wysyłane do usług zewnętrznych ani zapisywane na dysku. Historia wyników jest domyślnie przechowywana wyłącznie w pamięci do chwili zamknięcia aplikacji. Możesz opcjonalnie włączyć jej lokalny zapis między uruchomieniami. Aplikacja zawiera także notatki głosowe i korektę tekstu przeniesione z projektu Szeptucha.
+Aplikacja działa offline: obrazy ekranu są przetwarzane lokalnie w pamięci, nie są wysyłane do usług zewnętrznych ani zapisywane na dysku. Historia wyników jest domyślnie przechowywana wyłącznie w pamięci do chwili zamknięcia aplikacji. Możesz opcjonalnie włączyć jej lokalny zapis między uruchomieniami.
 
 ## Funkcje
 
@@ -15,10 +15,6 @@ Moduł OCR działa offline: obrazy ekranu są przetwarzane lokalnie w pamięci, 
 - Anulowanie zaznaczania klawiszem `Esc`, prawym przyciskiem myszy albo ponownym użyciem skrótu.
 - Obsługa zasobnika systemowego: zamknięcie okna minimalizuje aplikację do zasobnika.
 - Paczki Windows (`.exe`) i macOS (`.dmg`/`.zip`); nie trzeba osobno instalować Tesseracta.
-- Nagrywanie notatek głosowych z okna aplikacji, zasobnika lub skrótu `Ctrl + Shift + R` (`⌘ + Shift + R` na macOS).
-- Transkrypcja lokalna przez Whisper albo opcjonalnie przez OpenAI lub Gemini; lokalny model pobiera się przy pierwszym użyciu.
-- Zapis transkrypcji jako `.md`, `.txt` lub `.json`, historia zapisanych notatek i opcjonalne wklejanie wyniku do aktywnej aplikacji.
-- Korekta zaznaczonego tekstu przez OpenAI lub Gemini po skonfigurowaniu klucza API.
 
 ## Pobranie i użycie
 
@@ -31,33 +27,21 @@ Pliki instalacyjne powstają w katalogu `dist/` po zbudowaniu projektu.
 
 Naciśnij `Esc` lub kliknij prawym przyciskiem myszy, aby anulować zaznaczanie. Aplikacja obsługuje wiele monitorów, także zaznaczenia obejmujące pasek zadań. Pierwszy odczyt może trwać dłużej z powodu inicjalizacji silnika OCR.
 
-Po zamknięciu okna aplikacja pozostaje w zasobniku systemowym (na macOS w pasku menu). Kliknij ikonę zasobnika i wybierz **Zakończ**, aby całkowicie zamknąć program. Automatyczne uruchamianie wraz z systemem można włączyć w ustawieniach notatek głosowych.
+Po zamknięciu okna aplikacja pozostaje w zasobniku systemowym (na macOS w pasku menu). Kliknij ikonę zasobnika i wybierz **Zakończ**, aby całkowicie zamknąć program. Aplikacja nie uruchamia się automatycznie wraz z systemem.
 
 Jeśli globalny skrót jest już używany, aplikacja wyświetli komunikat. Zamknij program, który zajmuje skrót, i uruchom `Tekst z ekranu` ponownie. Możesz też użyć przycisku zaznaczania w oknie albo menu zasobnika.
 
 Pusty wynik OCR nie nadpisuje zawartości schowka.
 
-## Notatki głosowe i korekta
-
-Kliknij **Notatki głosowe** w nawigacji OCR lub wybierz tę pozycję w menu zasobnika. Otworzy się okno nagrywania, historii notatek i ustawień. Domyślny skrót nagrywania to `Ctrl + Shift + R` na Windowsie lub `⌘ + Shift + R` na macOS. Nagranie rozpoczęte skrótem jest po transkrypcji wklejane do aktywnej aplikacji; nagranie rozpoczęte w oknie lub zasobniku trafia do pliku.
-
-Domyślnie nagrania transkrybuje lokalny Whisper. Model jest pobierany przy pierwszym użyciu i potem działa lokalnie. W ustawieniach można wybrać OpenAI albo Gemini i podać klucz API. Można też wybrać język nagrania, format pliku, folder zapisu, skróty klawiaturowe i źródła automatycznego zapisu. Notatki są domyślnie zapisywane w folderze `Dokumenty/Szeptucha`.
-
-Aby poprawić zaznaczony tekst w innej aplikacji, skonfiguruj OpenAI albo Gemini, zaznacz tekst i użyj skrótu `Ctrl + Q` (`⌘ + Shift + E` na macOS). Korekta wymaga klucza API i wysyła zaznaczony tekst do wybranego dostawcy.
-
 ## Prywatność
 
-Całe rozpoznawanie OCR odbywa się lokalnie. Dołączone dane językowe polskiego i angielskiego są przy pierwszym użyciu kopiowane do lokalnego cache aplikacji. Żaden obraz ekranu ani rozpoznany tekst OCR nie jest wysyłany do internetu. Ustawienia OCR są przechowywane lokalnie między uruchomieniami. Historia OCR pozostaje tylko w pamięci, chyba że w ustawieniach włączysz jej lokalny zapis. Plik stanu ma limit 10 MB; gdy historia go przekroczy, aplikacja zapisuje najnowsze wpisy, które się mieszczą. Pozostałe są dostępne do końca bieżącej sesji.
-
-Nagrania przetwarzane lokalnie nie są wysyłane do API, ale model Whisper musi zostać pobrany przy pierwszym użyciu. Po wybraniu OpenAI lub Gemini nagranie albo tekst do korekty trafia do wybranego dostawcy. Klucz API i ustawienia notatek są przechowywane lokalnie w katalogu danych aplikacji, a zapisane notatki w wybranym folderze.
+Całe rozpoznawanie tekstu odbywa się lokalnie. Dołączone dane językowe polskiego i angielskiego są przy pierwszym użyciu kopiowane do lokalnego cache aplikacji. Żaden obraz ekranu ani rozpoznany tekst nie jest wysyłany do internetu. Ustawienia są przechowywane lokalnie między uruchomieniami. Historia pozostaje tylko w pamięci, chyba że w ustawieniach włączysz jej lokalny zapis. Plik stanu ma limit 10 MB; gdy historia go przekroczy, aplikacja zapisuje najnowsze wpisy, które się mieszczą. Pozostałe są dostępne do końca bieżącej sesji.
 
 ## Rozwój projektu
 
 Kod źródłowy jest podzielony według odpowiedzialności:
 
 - `src/main/` — główny proces Electrona, OCR, przechwytywanie ekranu, historia i lokalny zapis.
-- `src/voice/` — nagrywanie, transkrypcja, korekta, skróty i zapis notatek.
-- `src/voice-ui/` — interfejs notatek głosowych budowany przez Vite.
 - `src/main/platform/` — pomocnicze skrypty zależne od Windows; macOS korzysta z Electron `desktopCapturer`.
 - `src/renderer/` — okna aplikacji, mostek preload, style i skrypty interfejsu.
 - `src/shared/` — czyste funkcje współdzielone przez proces główny i testy.
@@ -86,7 +70,6 @@ Skrypty:
 
 - `npm start` — uruchamia aplikację Electron.
 - `npm test` — uruchamia testy automatyczne za pomocą test runnera Node.js.
-- `npm run test:voice` — sprawdza uruchomienie okna notatek głosowych i połączenie z procesem głównym.
 - `npm run dist` lub `npm run dist:win` — buduje przenośny plik Windows w `dist/` i tworzy kopię `Tekst-z-ekranu.exe` bez numeru wersji.
 - `npm run dist:mac` — buduje paczki macOS `.dmg` i `.zip` dla bieżącej architektury Maca. Budowanie macOS należy uruchomić na macOS.
 - `npm run pack` — tworzy rozpakowaną paczkę Electron do inspekcji.
