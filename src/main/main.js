@@ -6,6 +6,7 @@ const { captureDisplays, withTimeout } = require('./capture');
 const { createHistoryStore } = require('./history');
 const { normalizeOcrText } = require('../shared/text');
 const { readAppState, writeAppState } = require('./storage');
+const voice = require('../voice/main.cjs');
 const APP_USER_MODEL_ID = 'pl.tekstzekranu.ocrdesktop';
 const TOAST_ACTIVATOR_CLSID = '{6F460C4A-1A97-4ED0-9C0F-8C953C9CE39B}';
 const APP_ICON = path.join(__dirname, '..', 'assets', process.platform === 'win32' ? 'icon.ico' : 'icon.png');
@@ -33,6 +34,18 @@ function showMain() {
   if (main.isMinimized()) main.restore();
   if (!main.isVisible()) main.show();
   main.focus();
+}
+function updateTrayMenu() {
+  if (!tray) return;
+  tray.setContextMenu(Menu.buildFromTemplate([
+    { label: `Zaznacz tekst (${CAPTURE_SHORTCUT_LABEL})`, click: capture },
+    { label: 'Otwórz OCR', click: showMain },
+    { type: 'separator' },
+    { label: 'Otwórz notatki głosowe', click: () => voice.show() },
+    { label: voice.isRecording() ? 'Zatrzymaj nagrywanie' : 'Rozpocznij nagrywanie', click: () => voice.toggleRecording() },
+    { type: 'separator' },
+    { label: 'Zakończ', click: () => app.quit() }
+  ]));
 }
 const notify = body => {
   // Portable Electron builds do not have a Start Menu shortcut with the
@@ -253,11 +266,9 @@ else {
     if (process.platform === 'darwin' && app.dock) app.dock.setIcon(appIcon);
     main.on('close', event => { if (!quitting) { event.preventDefault(); main.hide(); } });
     tray = new Tray(appIcon.resize({ width: 16, height: 16, quality: 'best' }));
-    tray.setContextMenu(Menu.buildFromTemplate([
-      { label: `Zaznacz tekst (${CAPTURE_SHORTCUT_LABEL})`, click: capture }, { label: 'Otwórz aplikację', click: showMain },
-      { type: 'separator' }, { label: 'Zakończ', click: () => app.quit() }
-    ]));
     tray.on('double-click', showMain);
+    updateTrayMenu();
+    ipcMain.on('open-voice', event => { if (event.sender === main.webContents) voice.show(); });
     ipcMain.handle('get-status', () => status);
     ipcMain.handle('get-history', () => history.list());
     ipcMain.handle('get-settings', () => ({ ...settings }));
@@ -306,6 +317,7 @@ else {
     status.shortcut = globalShortcut.register(CAPTURE_SHORTCUT, capture);
     send(status.shortcut ? 'Gotowy do zaznaczania' : `Skrót ${CAPTURE_SHORTCUT_LABEL} jest zajęty. Zamknij aplikację, która go używa, i uruchom tę ponownie.`);
     await main.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
+    await voice.init({ onStateChanged: updateTrayMenu });
   });
   app.on('activate', showMain);
   app.on('window-all-closed', () => {});
